@@ -52,7 +52,7 @@ Everything below needs Xcode, so it couldn't be done or verified from here:
    unlocked Payoff Reading category + Stats screen.
 5. **1024×1024 app icon** and a **1179×2556 screenshot** (no device frame) for the Devpost
    submission — not yet created.
-6. Push this repo to a public GitHub repo (Next Gen requires open-source code, no store listing).
+6. ~~Push this repo to a public GitHub repo~~ — done: [github.com/isaacgong0311-hash/strikecoach](https://github.com/isaacgong0311-hash/strikecoach).
 
 ## Local development (works on any machine)
 
