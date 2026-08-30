@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProgress, drillsRemainingToday, ProgressState } from '../lib/progress';
 import { unlockedCategories } from '../lib/drillEngine';
 import { useEntitlement } from '../lib/revenuecat';
 import { color, space, type } from '../theme';
+import PayoffDiagram from '../components/PayoffDiagram';
+import { STRATEGY_INSTANCES, STRATEGY_NAMES } from '../content/strategies';
+import { QUESTIONS } from '../content/questions';
 
 const ONBOARDED_KEY = 'strikecoach.onboarded.v1';
+const PREVIEW = STRATEGY_INSTANCES.find((s) => s.strategyKey === 'iron-condor')!;
 
 export default function Home() {
   const router = useRouter();
@@ -42,16 +46,42 @@ export default function Home() {
 
   if (showWelcome) {
     return (
-      <View style={styles.container}>
-        <Text style={type.display}>StrikeCoach</Text>
-        <Text style={styles.welcomeBody}>
-          Read a payoff diagram. Name the strategy. Call the breakeven. Five drills a day, free —
-          get sharp on options intuition the way you'd drill flashcards.
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.welcomeContent}>
+        <View style={styles.badge}>
+          <View style={styles.badgeDot} />
+          <Text style={styles.badgeText}>Free to start · options intuition</Text>
+        </View>
+
+        <Text style={styles.heroTitle}>
+          Read the chart.{'\n'}Call the strategy.
         </Text>
+        <Text style={styles.welcomeBody}>
+          Five drills a day, free. Payoff diagrams, strategy ID, breakevens — get sharp the way
+          you'd drill flashcards, not by rereading a textbook.
+        </Text>
+
+        <View style={styles.previewCard}>
+          <Text style={type.label}>SAMPLE DRILL</Text>
+          <Text style={styles.previewQuestion}>Which strategy does this payoff diagram show?</Text>
+          <PayoffDiagram points={PREVIEW.points} domain={PREVIEW.domain} width={300} height={140} />
+          <View style={styles.previewAnswerRow}>
+            <Text style={styles.previewAnswerLabel}>ANSWER</Text>
+            <Text style={styles.previewAnswerValue}>{PREVIEW.strategyName}</Text>
+          </View>
+        </View>
+
         <Pressable style={styles.primaryButton} onPress={dismissWelcome}>
           <Text style={styles.primaryButtonText}>Get started</Text>
         </Pressable>
-      </View>
+
+        <View style={styles.statsStrip}>
+          <Stat value={String(STRATEGY_NAMES.length)} label="STRATEGIES" />
+          <View style={styles.statDivider} />
+          <Stat value={String(QUESTIONS.length)} label="DRILLS" />
+          <View style={styles.statDivider} />
+          <Stat value="$0" label="TO START" />
+        </View>
+      </ScrollView>
     );
   }
 
@@ -59,6 +89,9 @@ export default function Home() {
   const categories = unlockedCategories(isPro);
   const strategyStats = progress.categoryStats['strategy-id'];
   const readingStats = progress.categoryStats['payoff-reading'];
+  const totalAttempts = strategyStats.attempts + readingStats.attempts;
+  const totalCorrect = strategyStats.correct + readingStats.correct;
+  const accuracyLabel = totalAttempts > 0 ? `${Math.round((totalCorrect / totalAttempts) * 100)}%` : '—';
 
   const onStartDrill = () => {
     if (!isPro && remaining <= 0) {
@@ -78,20 +111,24 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.streakRow}>
-        <View>
-          <Text style={type.label}>STREAK</Text>
-          <Text style={styles.streakNumber}>{progress.streak}</Text>
-        </View>
-        <View style={styles.rightAlign}>
-          <Text style={type.label}>{isPro ? 'DRILLS TODAY' : 'FREE DRILLS LEFT'}</Text>
-          <Text style={styles.streakNumber}>{isPro ? '∞' : remaining}</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.wordmark}>StrikeCoach</Text>
+        {isPro && <Text style={styles.proBadge}>PRO</Text>}
+      </View>
+
+      <View style={styles.statsStrip}>
+        <Stat value={String(progress.streak)} label="STREAK" />
+        <View style={styles.statDivider} />
+        <Stat value={isPro ? '∞' : String(remaining)} label={isPro ? 'DRILLS TODAY' : 'FREE LEFT'} />
+        <View style={styles.statDivider} />
+        <Stat value={accuracyLabel} label="ACCURACY" />
       </View>
 
       <Pressable style={styles.primaryButton} onPress={onStartDrill}>
         <Text style={styles.primaryButtonText}>Start drill</Text>
       </Pressable>
+
+      <Text style={styles.sectionLabel}>CATEGORIES</Text>
 
       <View style={styles.card}>
         <Text style={type.title}>Strategy ID</Text>
@@ -128,10 +165,65 @@ export default function Home() {
   );
 }
 
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg },
+  scroll: { flex: 1, backgroundColor: color.bg },
+  welcomeContent: { padding: space.lg, paddingBottom: space.xl, gap: space.md },
+
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: space.xs,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: 999,
+    paddingHorizontal: space.sm + 2,
+    paddingVertical: 6,
+    backgroundColor: color.surface,
+  },
+  badgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.accent },
+  badgeText: { fontSize: 12, fontWeight: '600', color: color.inkMuted },
+
+  heroTitle: {
+    fontSize: 38,
+    fontWeight: '800',
+    color: color.ink,
+    letterSpacing: -0.8,
+    lineHeight: 42,
+  },
   welcomeBody: { ...type.body, color: color.inkMuted, lineHeight: 22 },
+
+  previewCard: {
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: 12,
+    padding: space.md,
+    gap: space.sm,
+  },
+  previewQuestion: { fontSize: 16, fontWeight: '700', color: color.ink },
+  previewAnswerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+    paddingTop: space.sm,
+  },
+  previewAnswerLabel: { ...type.label, color: color.inkFaint },
+  previewAnswerValue: { fontSize: 15, fontWeight: '700', color: color.profit },
+
   primaryButton: {
     backgroundColor: color.ink,
     paddingVertical: space.md,
@@ -139,9 +231,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryButtonText: { color: color.accentInk, fontSize: 16, fontWeight: '700' },
-  streakRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: space.sm },
-  rightAlign: { alignItems: 'flex-end' },
-  streakNumber: { fontSize: 34, fontWeight: '700', color: color.ink, fontFamily: type.mono },
+
+  statsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: 12,
+    paddingVertical: space.md,
+  },
+  stat: { flex: 1, alignItems: 'center', gap: 2 },
+  statValue: { fontSize: 24, fontWeight: '800', color: color.ink, fontFamily: type.mono },
+  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.6, color: color.inkFaint },
+  statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: color.border },
+
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  wordmark: { fontSize: 22, fontWeight: '800', color: color.ink, letterSpacing: -0.4 },
+  proBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: color.accentInk,
+    backgroundColor: color.accent,
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  sectionLabel: { ...type.label, color: color.inkFaint, marginTop: space.xs },
+
   card: {
     backgroundColor: color.surface,
     borderWidth: 1,
