@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProgress, drillsRemainingToday, ProgressState } from '../lib/progress';
 import { unlockedCategories } from '../lib/drillEngine';
 import { useEntitlement } from '../lib/revenuecat';
-import { color, space, type } from '../theme';
+import { color, space, type, radius } from '../theme';
 import PayoffDiagram from '../components/PayoffDiagram';
 import { STRATEGY_INSTANCES, STRATEGY_NAMES } from '../content/strategies';
 import { QUESTIONS } from '../content/questions';
@@ -47,10 +47,7 @@ export default function Home() {
   if (showWelcome) {
     return (
       <ScrollView style={styles.scroll} contentContainerStyle={styles.welcomeContent}>
-        <View style={styles.badge}>
-          <View style={styles.badgeDot} />
-          <Text style={styles.badgeText}>Free to start · options intuition</Text>
-        </View>
+        <Text style={styles.kicker}>Free to start · options intuition</Text>
 
         <Text style={styles.heroTitle}>
           Read the chart.{'\n'}Call the strategy.
@@ -180,20 +177,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: color.bg },
   welcomeContent: { padding: space.lg, paddingBottom: space.xl, gap: space.md },
 
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: space.xs,
-    borderWidth: 1,
-    borderColor: color.border,
-    borderRadius: 999,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: 6,
-    backgroundColor: color.surface,
-  },
-  badgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.accent },
-  badgeText: { fontSize: 12, fontWeight: '600', color: color.inkMuted },
+  kicker: { ...type.label, color: color.inkFaint },
 
   heroTitle: {
     fontSize: 38,
@@ -208,7 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
     borderWidth: 1,
     borderColor: color.border,
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: space.md,
     gap: space.sm,
   },
@@ -227,7 +211,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: color.ink,
     paddingVertical: space.md,
-    borderRadius: 8,
+    borderRadius: radius.md,
     alignItems: 'center',
   },
   primaryButtonText: { color: color.accentInk, fontSize: 16, fontWeight: '700' },
@@ -238,22 +222,21 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
     borderWidth: 1,
     borderColor: color.border,
-    borderRadius: 12,
+    borderRadius: radius.md,
     paddingVertical: space.md,
   },
   stat: { flex: 1, alignItems: 'center', gap: 2 },
   statValue: { fontSize: 24, fontWeight: '800', color: color.ink, fontFamily: type.mono },
-  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.6, color: color.inkFaint },
+  statLabel: { ...type.label, color: color.inkFaint },
   statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: color.border },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   wordmark: { fontSize: 22, fontWeight: '800', color: color.ink, letterSpacing: -0.4 },
   proBadge: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...type.label,
     color: color.accentInk,
     backgroundColor: color.accent,
-    borderRadius: 4,
+    borderRadius: radius.sm,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
@@ -263,19 +246,18 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
     borderWidth: 1,
     borderColor: color.border,
-    borderRadius: 8,
+    borderRadius: radius.md,
     padding: space.md,
     gap: space.xs,
   },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardBody: { color: color.inkMuted, fontSize: 14 },
   lockBadge: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...type.label,
     color: color.warn,
     borderWidth: 1,
     borderColor: color.warn,
-    borderRadius: 4,
+    borderRadius: radius.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },

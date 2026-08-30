@@ -53,9 +53,14 @@ export const type = {
     fontSize: 15,
     fontWeight: '400' as const,
   },
+  // Uppercase mono kicker — StrikeLab applies --font-mono well beyond just
+  // numbers (table headers, callout labels); small caps labels here do the
+  // same, letter-spaced and muted, never a bordered "pill badge".
   label: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600' as const,
-    letterSpacing: 0.6,
+    letterSpacing: 1.2,
+    fontFamily: 'Courier New',
+    textTransform: 'uppercase' as const,
   },
 } as const;
