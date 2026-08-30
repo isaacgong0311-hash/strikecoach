@@ -45,7 +45,7 @@ export default function Summary() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.sm, justifyContent: 'center' },
-  bigNumber: { fontSize: 56, fontWeight: '700', color: color.ink },
+  bigNumber: { fontSize: 56, fontWeight: '700', color: color.ink, fontFamily: type.mono },
   subline: { color: color.inkMuted, fontSize: 16, marginBottom: space.lg },
   buttonGroup: { gap: space.sm },
   primaryButton: { backgroundColor: color.ink, paddingVertical: space.md, borderRadius: 8, alignItems: 'center' },

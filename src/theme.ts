@@ -1,20 +1,25 @@
 /**
- * Small, restrained design system. Deliberately avoids the generic-AI-app look
- * (no purple/blue gradients, no glow, no bubble shadows) in favor of a flat,
- * high-contrast, terminal-adjacent style that fits a quant/trading tool.
+ * Small, restrained design system — deliberately the exact palette from
+ * strikelab.dev (globals.css --paper/--ink/--accent/--coral), not a
+ * from-scratch invention. StrikeCoach is content built on the same options
+ * math as StrikeLab's PayoffDiagram component; it should look like it
+ * belongs to the same product family, not a generic new app.
  */
 
 export const color = {
-  bg: '#F5F4F0',
-  surface: '#FFFFFF',
-  border: '#DDD9CF',
-  ink: '#14140F',
-  inkMuted: '#5B584C',
-  inkFaint: '#8B8778',
-  accent: '#1F5E3C', // deep green — profit / primary action
+  bg: '#F2F2F0', // --paper
+  surface: '#FFFFFF', // --paper-2
+  surfaceAlt: '#F8F8F7', // --paper-3
+  border: '#B0B0A9', // --line-2
+  ink: '#1C1917', // --ink
+  inkMuted: '#44403C', // --ink-2
+  inkFaint: '#57534E', // --ink-3
+  accent: '#15803D', // --accent
   accentInk: '#FFFFFF',
-  loss: '#8A2A1E', // deep brick red — loss
-  profit: '#1F5E3C',
+  loss: '#AD3A0A', // --coral
+  lossTint: '#FDE9E4', // --coral-tint
+  profit: '#15803D',
+  profitTint: '#E4F3EA', // same tint construction as --coral-tint, applied to --accent
   warn: '#8A5A1E',
 } as const;
 
@@ -32,7 +37,9 @@ export const radius = {
 } as const;
 
 export const type = {
-  mono: 'Menlo', // monospace for numbers/prices — deliberate, ties to the quant aesthetic
+  // Matches StrikeLab's --font-mono: every price/score/stat is monospace
+  // there too — same reason (numbers should feel measured, not decorative).
+  mono: 'Courier New',
   display: {
     fontSize: 28,
     fontWeight: '700' as const,

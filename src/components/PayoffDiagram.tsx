@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import Svg, { Line, Polygon, Polyline, Text as SvgText } from 'react-native-svg';
 import { Point } from '../lib/payoff';
-import { color } from '../theme';
+import { color, type } from '../theme';
 
 interface Props {
   points: Point[];
@@ -51,10 +51,17 @@ export default function PayoffDiagram({ points, domain, width = 320, height = 19
           strokeDasharray="3,4"
         />
         <Polyline points={linePoints} fill="none" stroke={color.ink} strokeWidth={2.5} strokeLinejoin="round" />
-        <SvgText x={PADDING.left} y={height - 6} fontSize={11} fill={color.inkFaint}>
+        <SvgText x={PADDING.left} y={height - 6} fontSize={11} fontFamily={type.mono} fill={color.inkFaint}>
           {`$${domain[0].toFixed(0)}`}
         </SvgText>
-        <SvgText x={width - PADDING.right} y={height - 6} fontSize={11} fill={color.inkFaint} textAnchor="end">
+        <SvgText
+          x={width - PADDING.right}
+          y={height - 6}
+          fontSize={11}
+          fontFamily={type.mono}
+          fill={color.inkFaint}
+          textAnchor="end"
+        >
           {`$${domain[1].toFixed(0)}`}
         </SvgText>
       </Svg>

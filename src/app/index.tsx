@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: color.accentInk, fontSize: 16, fontWeight: '700' },
   streakRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: space.sm },
   rightAlign: { alignItems: 'flex-end' },
-  streakNumber: { fontSize: 34, fontWeight: '700', color: color.ink },
+  streakNumber: { fontSize: 34, fontWeight: '700', color: color.ink, fontFamily: type.mono },
   card: {
     backgroundColor: color.surface,
     borderWidth: 1,

@@ -66,6 +66,6 @@ const styles = StyleSheet.create({
     padding: space.md,
     gap: space.xs,
   },
-  bigNumber: { fontSize: 28, fontWeight: '700', color: color.ink },
-  statLine: { fontSize: 16, color: color.inkMuted },
+  bigNumber: { fontSize: 28, fontWeight: '700', color: color.ink, fontFamily: type.mono },
+  statLine: { fontSize: 16, color: color.inkMuted, fontFamily: type.mono },
 });

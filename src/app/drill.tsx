@@ -101,7 +101,9 @@ export default function Drill() {
               disabled={isAnswered}
               style={[styles.choice, variant === 'correct' && styles.choiceCorrect, variant === 'incorrect' && styles.choiceIncorrect]}
             >
-              <Text style={styles.choiceText}>{choice}</Text>
+              <Text style={[styles.choiceText, question.category === 'payoff-reading' && styles.choiceTextMono]}>
+                {choice}
+              </Text>
             </Pressable>
           );
         })}
@@ -134,9 +136,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: space.md,
   },
-  choiceCorrect: { borderColor: color.profit, backgroundColor: '#EAF3ED' },
-  choiceIncorrect: { borderColor: color.loss, backgroundColor: '#F6E9E7' },
+  choiceCorrect: { borderColor: color.profit, backgroundColor: color.profitTint },
+  choiceIncorrect: { borderColor: color.loss, backgroundColor: color.lossTint },
   choiceText: { fontSize: 15, color: color.ink, fontWeight: '500' },
+  choiceTextMono: { fontFamily: type.mono },
   feedback: { gap: space.sm, marginTop: space.sm },
   feedbackHeadline: { fontSize: 18, fontWeight: '700' },
   explanation: { color: color.inkMuted, fontSize: 14, lineHeight: 20 },
