@@ -54,6 +54,13 @@ Everything below needs Xcode, so it couldn't be done or verified from here:
    submission — not yet created.
 6. ~~Push this repo to a public GitHub repo~~ — done: [github.com/isaacgong0311-hash/strikecoach](https://github.com/isaacgong0311-hash/strikecoach).
 
+## Web preview
+
+There's also a web build (`react-native-web`) deployed for quick browsing without a simulator —
+useful for judges/reviewers who just want to click through the UI. **It's a visual preview only:
+RevenueCat purchases are iOS-only and are disabled on web**, so the paywall trigger is a no-op
+there. The real purchase flow only exists in the iOS build (see below).
+
 ## Local development (works on any machine)
 
 ```bash
