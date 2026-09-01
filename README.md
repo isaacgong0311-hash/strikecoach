@@ -5,6 +5,8 @@ profit/loss and breakeven. Built for the [RevenueCat Shipaton 2026](https://www.
 Next Gen (student) award track.
 
 Full design rationale: [docs/specs/2026-08-29-strikecoach-design.md](docs/specs/2026-08-29-strikecoach-design.md).
+Step-by-step path to actually submitting: [docs/SUBMISSION-PLAN.md](docs/SUBMISSION-PLAN.md) —
+start there.
 
 ## What's implemented
 
