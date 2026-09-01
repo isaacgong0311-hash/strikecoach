@@ -4,28 +4,44 @@ Daily options-strategy drills — read a payoff diagram, name the strategy, call
 profit/loss and breakeven. Built for the [RevenueCat Shipaton 2026](https://www.shipaton.com/),
 Next Gen (student) award track.
 
+**▶ Try it now: [strikecoach.vercel.app](https://strikecoach.vercel.app)** — the full app running
+in the browser, no install. (Purchases are iOS-only, so the paywall is inert there; everything
+else is live.)
+
 Full design rationale: [docs/specs/2026-08-29-strikecoach-design.md](docs/specs/2026-08-29-strikecoach-design.md).
 Step-by-step path to actually submitting: [docs/SUBMISSION-PLAN.md](docs/SUBMISSION-PLAN.md) —
 start there.
 
 ## What's implemented
 
-- Real options-payoff math (`src/lib/payoff.ts`) — long/short calls, puts, and stock legs
-  composed into 12 standard strategies (long call/put, covered call, protective put, bull/bear
-  spreads, straddles, strangles, iron condor, butterfly, collar), with exact max profit/loss and
-  breakeven calculation (not sampled/approximated).
-- A generated content bank of ~48 drill questions across 2 categories (`src/content/`), built
-  from that payoff math so every question's answer is provably correct.
-- Local progress tracking — streak, daily free-drill cap, per-category accuracy — persisted with
-  AsyncStorage, no backend (`src/lib/progress.ts`).
-- A drill session engine that avoids repeats and re-serves missed questions (`src/lib/drillEngine.ts`).
-- 6 screens under Expo Router (`src/app/`): Home (folds in the one-time welcome card), Drill,
-  Session Summary, Stats (Pro-gated), Settings.
-- RevenueCat integration (`src/lib/revenuecat.tsx`) — entitlement-aware context provider, gating
-  the daily cap, the Payoff Reading category, and Stats behind a "StrikeCoach Pro" subscription,
-  presented via RevenueCat's built-in Paywall UI.
-- 32 Jest unit tests covering the payoff math, streak/daily-reset logic, and drill selection —
-  `npm test`. Full project typechecks clean — `npm run typecheck`.
+**The engine.** Real options-payoff math (`src/lib/payoff.ts`) — long/short calls, puts, and
+stock legs composed into 12 standard strategies (long call/put, covered call, protective put,
+bull/bear spreads, straddles, strangles, iron condor, butterfly, collar). Max profit, max loss and
+breakevens are computed *analytically* from the legs, not sampled off a plot: an unbounded tail is
+reported as "Unlimited" rather than as whatever number the chart happened to stop at. Every drill
+question is generated from that engine (`src/content/`), so no answer is hand-entered and none can
+silently drift out of sync with its diagram.
+
+**The app** — 6 screens under Expo Router (`src/app/`):
+
+- **Landing** (`components/WelcomeScreen.tsx`) — hero, a live sample drill, and the full strategy
+  library: twelve rows, each with a real payoff sparkline and its computed max profit / max loss /
+  breakevens, rendered from the engine at runtime.
+- **Dashboard** — stat strip, a 7-day activity strip, and today's drill-budget meter.
+- **Drill** — SVG payoff diagram, multiple choice, animated correct/incorrect reveal.
+- **Session summary** — score plus a per-question recap with the correct answers.
+- **Stats** (Pro) — overall accuracy, lifetime drills, and per-category accuracy bars.
+- **Settings** — subscription status and restore purchases.
+
+**Monetization.** RevenueCat integration (`src/lib/revenuecat.tsx`) — an entitlement-aware context
+provider gating the daily drill cap, the Payoff Reading category, and the Stats screen behind a
+"StrikeCoach Pro" subscription, presented via RevenueCat's built-in Paywall UI. The paywall fires
+on "Drill again" after a completed session, so the ask lands on a finished result rather than
+interrupting one.
+
+**Testing.** 82 Jest tests — the payoff math for all 12 strategies (hand-computed expected values),
+content-bank integrity, streak and daily-reset rules, activity history, persisted-schema migration,
+and the session-log encode/decode round trip. `npm test`. Typechecks clean: `npm run typecheck`.
 
 ## What's left (Mac-required — this was built from a Windows machine)
 
