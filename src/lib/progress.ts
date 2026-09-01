@@ -2,6 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QuestionCategory } from '../content/questions';
 
 export const DAILY_FREE_DRILLS = 5;
+/** How many days of activity history to keep — only ever rendered as a
+ * 7-day strip, so a small buffer beyond that is plenty. */
+export const HISTORY_DAYS = 30;
 const STORAGE_KEY = 'strikecoach.progress.v1';
 
 export interface CategoryStats {
@@ -17,6 +20,9 @@ export interface ProgressState {
   dailyResetDate: string;
   dailyDrillsUsed: number;
   categoryStats: Record<QuestionCategory, CategoryStats>;
+  /** Every YYYY-MM-DD the user drilled on, oldest first, capped to
+   * HISTORY_DAYS. Powers the dashboard's activity strip. */
+  activeDates: string[];
 }
 
 export function emptyProgress(today: string): ProgressState {
@@ -29,6 +35,37 @@ export function emptyProgress(today: string): ProgressState {
       'strategy-id': { attempts: 0, correct: 0 },
       'payoff-reading': { attempts: 0, correct: 0 },
     },
+    activeDates: [],
+  };
+}
+
+/**
+ * Coerce a parsed blob into a complete ProgressState. Persisted progress from
+ * an earlier build won't have fields added since — reading one straight back
+ * would leave `activeDates` undefined and crash the first `.map` over it. This
+ * fills any missing/!wrong-typed field from a fresh default rather than
+ * trusting the shape on disk.
+ */
+export function normalizeProgress(parsed: Partial<ProgressState> | null, today: string): ProgressState {
+  const base = emptyProgress(today);
+  if (!parsed || typeof parsed !== 'object') return base;
+  const stats = parsed.categoryStats ?? base.categoryStats;
+  const statFor = (k: QuestionCategory): CategoryStats => {
+    const s = stats?.[k];
+    return s && typeof s.attempts === 'number' && typeof s.correct === 'number' ? s : { attempts: 0, correct: 0 };
+  };
+  return {
+    streak: typeof parsed.streak === 'number' ? parsed.streak : base.streak,
+    lastActiveDate: typeof parsed.lastActiveDate === 'string' ? parsed.lastActiveDate : base.lastActiveDate,
+    dailyResetDate: typeof parsed.dailyResetDate === 'string' ? parsed.dailyResetDate : base.dailyResetDate,
+    dailyDrillsUsed: typeof parsed.dailyDrillsUsed === 'number' ? parsed.dailyDrillsUsed : base.dailyDrillsUsed,
+    categoryStats: {
+      'strategy-id': statFor('strategy-id'),
+      'payoff-reading': statFor('payoff-reading'),
+    },
+    activeDates: Array.isArray(parsed.activeDates)
+      ? parsed.activeDates.filter((d): d is string => typeof d === 'string')
+      : base.activeDates,
   };
 }
 
@@ -62,7 +99,39 @@ export function applyStreakForNewDay(state: ProgressState, today: string): Progr
   if (state.lastActiveDate === today) return state;
   const gap = state.lastActiveDate ? daysBetween(state.lastActiveDate, today) : null;
   const streak = gap === 1 ? state.streak + 1 : 1;
-  return { ...state, streak, lastActiveDate: today };
+  // This branch is exactly "first drill of a new day", so it's also where the
+  // activity history gains an entry.
+  const activeDates = [...state.activeDates.filter((d) => d !== today), today].slice(-HISTORY_DAYS);
+  return { ...state, streak, lastActiveDate: today, activeDates };
+}
+
+export interface ActivityDay {
+  date: string;
+  /** Single-letter weekday label (S M T W T F S), for the strip's axis. */
+  label: string;
+  active: boolean;
+  isToday: boolean;
+}
+
+const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+/** The last `days` calendar days ending today, oldest first, each flagged with
+ * whether the user drilled that day. Pure — the caller supplies "today". */
+export function recentActivity(state: ProgressState, today: string = todayKey(), days = 7): ActivityDay[] {
+  const seen = new Set(state.activeDates);
+  const end = new Date(`${today}T00:00:00`);
+  const out: ActivityDay[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(end.getTime() - i * 86_400_000);
+    const key = todayKey(d);
+    out.push({
+      date: key,
+      label: WEEKDAY_LETTERS[d.getDay()],
+      active: seen.has(key),
+      isToday: key === today,
+    });
+  }
+  return out;
 }
 
 /** Record one answered drill. Pure function — combines the daily-reset and streak
@@ -108,8 +177,9 @@ export async function loadProgress(): Promise<ProgressState> {
   }
   if (!raw) return emptyProgress(todayKey());
   try {
-    const parsed = JSON.parse(raw) as ProgressState;
-    return applyDailyReset(parsed, todayKey());
+    const today = todayKey();
+    const parsed = JSON.parse(raw) as Partial<ProgressState>;
+    return applyDailyReset(normalizeProgress(parsed, today), today);
   } catch {
     return emptyProgress(todayKey());
   }

@@ -3,13 +3,14 @@ import { View, Text, Pressable, StyleSheet, ActivityIndicator, ScrollView } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loadProgress, drillsRemainingToday, ProgressState } from '../lib/progress';
+import { loadProgress, drillsRemainingToday, recentActivity, ProgressState, DAILY_FREE_DRILLS } from '../lib/progress';
 import { unlockedCategories } from '../lib/drillEngine';
 import { useEntitlement } from '../lib/revenuecat';
 import { color, space, type, radius } from '../theme';
 import Button from '../components/Button';
 import Wordmark from '../components/Wordmark';
 import WelcomeScreen from '../components/WelcomeScreen';
+import ActivityStrip from '../components/ActivityStrip';
 import { questionsByCategory } from '../content/questions';
 
 const ONBOARDED_KEY = 'strikecoach.onboarded.v1';
@@ -92,6 +93,13 @@ export default function Home() {
       </View>
 
       <Button title="Start drill" onPress={onStartDrill} arrow />
+
+      <ActivityStrip
+        days={recentActivity(progress)}
+        drillsUsedToday={progress.dailyDrillsUsed}
+        dailyCap={DAILY_FREE_DRILLS}
+        isPro={isPro}
+      />
 
       <Text style={styles.sectionLabel}>DRILL CATEGORIES</Text>
 
