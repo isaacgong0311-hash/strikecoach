@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator, Animated, Easing } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator, ScrollView, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import PayoffDiagram from '../components/PayoffDiagram';
+import Button from '../components/Button';
 import { Question } from '../content/questions';
 import { availableQuestions, newSession, pickNextQuestion, recordSessionAnswer, DrillSessionState } from '../lib/drillEngine';
 import { loadProgress, saveProgress, recordAnswer, drillsRemainingToday, ProgressState } from '../lib/progress';
 import { useEntitlement } from '../lib/revenuecat';
-import { color, space, type } from '../theme';
+import { color, space, type, radius } from '../theme';
 
 const SESSION_LENGTH = 5;
 
@@ -95,7 +96,7 @@ export default function Drill() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.progressLabel}>
         {answeredCount + 1} / {SESSION_LENGTH}
       </Text>
@@ -155,17 +156,16 @@ export default function Drill() {
             {isCorrect ? 'Correct' : 'Not quite'}
           </Text>
           <Text style={styles.explanation}>{question.explanation}</Text>
-          <Pressable style={styles.primaryButton} onPress={onNext} accessibilityRole="button">
-            <Text style={styles.primaryButtonText}>Next</Text>
-          </Pressable>
+          <Button title="Next" onPress={onNext} arrow />
         </Animated.View>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.md },
+  scroll: { flex: 1, backgroundColor: color.bg },
+  container: { padding: space.lg, paddingBottom: space.xl, gap: space.md, flexGrow: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg },
   progressLabel: { ...type.label, color: color.inkFaint },
   choices: { gap: space.sm },
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
     borderWidth: 1,
     borderColor: color.border,
-    borderRadius: 8,
+    borderRadius: radius.md,
     padding: space.md,
   },
   choiceCorrect: { borderColor: color.profit, backgroundColor: color.profitTint },
@@ -183,6 +183,4 @@ const styles = StyleSheet.create({
   feedback: { gap: space.sm, marginTop: space.sm },
   feedbackHeadline: { fontSize: 18, fontWeight: '700' },
   explanation: { color: color.inkMuted, fontSize: 14, lineHeight: 20 },
-  primaryButton: { backgroundColor: color.ink, paddingVertical: space.md, borderRadius: 8, alignItems: 'center' },
-  primaryButtonText: { color: color.accentInk, fontSize: 16, fontWeight: '700' },
 });

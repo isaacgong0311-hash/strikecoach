@@ -19,7 +19,9 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: color.bg },
           }}
         >
-          <Stack.Screen name="index" options={{ title: 'StrikeCoach' }} />
+          {/* Home renders its own two-tone Wordmark + PRO badge in-content —
+              a native header title here would just duplicate it. */}
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="drill" options={{ title: 'Drill', headerBackTitle: 'Quit' }} />
           <Stack.Screen name="summary" options={{ title: 'Session Complete', headerBackVisible: false }} />
           <Stack.Screen name="stats" options={{ title: 'Your Stats' }} />

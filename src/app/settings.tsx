@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import Purchases from 'react-native-purchases';
 import { useEntitlement } from '../lib/revenuecat';
-import { color, space, type } from '../theme';
+import { color, space, type, radius } from '../theme';
+import Button from '../components/Button';
 
 export default function Settings() {
   const { isPro, refresh, isConfigured } = useEntitlement();
@@ -26,21 +27,21 @@ export default function Settings() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
+      <View style={[styles.card, isPro && styles.cardActive]}>
         <Text style={type.label}>SUBSCRIPTION STATUS</Text>
-        <Text style={styles.statusText}>{isPro ? 'StrikeCoach Pro — active' : 'Free plan'}</Text>
+        <View style={styles.statusRow}>
+          {isPro && <View style={styles.statusDot} />}
+          <Text style={styles.statusText}>{isPro ? 'StrikeCoach Pro — active' : 'Free plan'}</Text>
+        </View>
       </View>
 
-      <Pressable
-        style={styles.button}
+      <Button
+        title={restoring ? 'Restoring…' : 'Restore purchases'}
         onPress={onRestore}
         disabled={restoring}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: restoring, busy: restoring }}
-      >
-        <Text style={styles.buttonText}>{restoring ? 'Restoring…' : 'Restore purchases'}</Text>
-      </Pressable>
+        variant="secondary"
+      />
 
       <View style={styles.about}>
         <Text style={type.label}>ABOUT</Text>
@@ -48,29 +49,25 @@ export default function Settings() {
           StrikeCoach — daily options-strategy drills. Built for the RevenueCat Shipaton 2026.
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.md },
+  scroll: { flex: 1, backgroundColor: color.bg },
+  container: { padding: space.lg, paddingBottom: space.xl, gap: space.md, flexGrow: 1 },
   card: {
     backgroundColor: color.surface,
     borderWidth: 1,
     borderColor: color.border,
-    borderRadius: 8,
+    borderRadius: radius.md,
     padding: space.md,
     gap: space.xs,
   },
+  cardActive: { borderColor: color.accent, backgroundColor: color.profitTint },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.accent },
   statusText: { fontSize: 16, fontWeight: '600', color: color.ink },
-  button: {
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.md,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: { color: color.ink, fontSize: 15, fontWeight: '600' },
   about: { marginTop: 'auto', gap: space.xs },
   aboutText: { color: color.inkFaint, fontSize: 13, lineHeight: 18 },
 });

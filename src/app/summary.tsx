@@ -1,9 +1,17 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEntitlement } from '../lib/revenuecat';
 import { drillsRemainingToday, loadProgress } from '../lib/progress';
-import { color, space, type } from '../theme';
+import { color, space, type, radius } from '../theme';
+import Button from '../components/Button';
+
+function tierFor(pct: number, total: number): { label: string; check: boolean } {
+  if (total === 0) return { label: 'No drills answered', check: false };
+  if (pct >= 80) return { label: 'Strong session', check: true };
+  if (pct >= 50) return { label: 'Solid session', check: true };
+  return { label: 'Keep drilling', check: false };
+}
 
 export default function Summary() {
   const router = useRouter();
@@ -12,6 +20,7 @@ export default function Summary() {
   const correct = Number(params.correct ?? 0);
   const total = Number(params.total ?? 0);
   const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const tier = tierFor(pct, total);
 
   const onDrillAgain = async () => {
     const progress = await loadProgress();
@@ -31,17 +40,14 @@ export default function Summary() {
         {correct} of {total} correct
       </Text>
 
+      <View style={styles.toast}>
+        {tier.check && <Text style={styles.toastCheck}>✓</Text>}
+        <Text style={styles.toastLabel}>{tier.label}</Text>
+      </View>
+
       <View style={styles.buttonGroup}>
-        <Pressable style={styles.primaryButton} onPress={onDrillAgain} accessibilityRole="button">
-          <Text style={styles.primaryButtonText}>Drill again</Text>
-        </Pressable>
-        <Pressable
-          style={styles.secondaryButton}
-          onPress={() => router.replace('/')}
-          accessibilityRole="button"
-        >
-          <Text style={styles.secondaryButtonText}>Back to home</Text>
-        </Pressable>
+        <Button title="Drill again" onPress={onDrillAgain} arrow />
+        <Button title="Back to home" onPress={() => router.replace('/')} variant="secondary" />
       </View>
     </View>
   );
@@ -50,16 +56,19 @@ export default function Summary() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.sm, justifyContent: 'center' },
   bigNumber: { fontSize: 56, fontWeight: '700', color: color.ink, fontFamily: type.mono },
-  subline: { color: color.inkMuted, fontSize: 16, marginBottom: space.lg },
-  buttonGroup: { gap: space.sm },
-  primaryButton: { backgroundColor: color.ink, paddingVertical: space.md, borderRadius: 8, alignItems: 'center' },
-  primaryButtonText: { color: color.accentInk, fontSize: 16, fontWeight: '700' },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.md,
-    borderRadius: 8,
+  subline: { color: color.inkMuted, fontSize: 16 },
+  toast: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: space.xs,
+    alignSelf: 'flex-start',
+    backgroundColor: color.ink,
+    borderRadius: radius.sm,
+    paddingHorizontal: space.sm + 2,
+    paddingVertical: 6,
+    marginBottom: space.lg,
   },
-  secondaryButtonText: { color: color.ink, fontSize: 16, fontWeight: '600' },
+  toastCheck: { color: color.accent, fontWeight: '800', fontSize: 13 },
+  toastLabel: { color: color.accentInk, fontSize: 12, fontWeight: '600' },
+  buttonGroup: { gap: space.sm },
 });

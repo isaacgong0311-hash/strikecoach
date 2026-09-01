@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProgress, drillsRemainingToday, ProgressState } from '../lib/progress';
@@ -7,8 +8,10 @@ import { unlockedCategories } from '../lib/drillEngine';
 import { useEntitlement } from '../lib/revenuecat';
 import { color, space, type, radius } from '../theme';
 import PayoffDiagram from '../components/PayoffDiagram';
+import Button from '../components/Button';
+import Wordmark from '../components/Wordmark';
 import { STRATEGY_INSTANCES, STRATEGY_NAMES } from '../content/strategies';
-import { QUESTIONS } from '../content/questions';
+import { QUESTIONS, questionsByCategory } from '../content/questions';
 
 const ONBOARDED_KEY = 'strikecoach.onboarded.v1';
 const PREVIEW = STRATEGY_INSTANCES.find((s) => s.strategyKey === 'iron-condor')!;
@@ -38,47 +41,49 @@ export default function Home() {
 
   if (!progress || showWelcome === null || entitlementLoading) {
     return (
-      <View style={styles.center}>
+      <SafeAreaView style={styles.center} edges={['top']}>
         <ActivityIndicator color={color.ink} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (showWelcome) {
     return (
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.welcomeContent}>
-        <Text style={styles.kicker}>Free to start · options intuition</Text>
+      <SafeAreaView style={styles.scroll} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.welcomeContent}>
+          <Wordmark />
+          <Text style={styles.kicker}>Free to start · options intuition</Text>
 
-        <Text style={styles.heroTitle}>
-          Read the chart.{'\n'}Call the strategy.
-        </Text>
-        <Text style={styles.welcomeBody}>
-          Five drills a day, free. Payoff diagrams, strategy ID, breakevens — get sharp the way
-          you'd drill flashcards, not by rereading a textbook.
-        </Text>
+          <Text style={styles.heroTitle}>
+            Read the chart.{'\n'}Call{' '}
+            <Text style={styles.heroTitleAccent}>the strategy.</Text>
+          </Text>
+          <Text style={styles.welcomeBody}>
+            Five drills a day, free. Payoff diagrams, strategy ID, breakevens — get sharp the way
+            you'd drill flashcards, not by rereading a textbook.
+          </Text>
 
-        <View style={styles.previewCard}>
-          <Text style={type.label}>SAMPLE DRILL</Text>
-          <Text style={styles.previewQuestion}>Which strategy does this payoff diagram show?</Text>
-          <PayoffDiagram points={PREVIEW.points} domain={PREVIEW.domain} width={300} height={140} />
-          <View style={styles.previewAnswerRow}>
-            <Text style={styles.previewAnswerLabel}>ANSWER</Text>
-            <Text style={styles.previewAnswerValue}>{PREVIEW.strategyName}</Text>
+          <View style={styles.previewCard}>
+            <Text style={type.label}>SAMPLE DRILL</Text>
+            <Text style={styles.previewQuestion}>Which strategy does this payoff diagram show?</Text>
+            <PayoffDiagram points={PREVIEW.points} domain={PREVIEW.domain} width={300} height={140} />
+            <View style={styles.previewAnswerRow}>
+              <Text style={styles.previewAnswerLabel}>ANSWER</Text>
+              <Text style={styles.previewAnswerValue}>{PREVIEW.strategyName}</Text>
+            </View>
           </View>
-        </View>
 
-        <Pressable style={styles.primaryButton} onPress={dismissWelcome} accessibilityRole="button">
-          <Text style={styles.primaryButtonText}>Get started</Text>
-        </Pressable>
+          <Button title="Get started" onPress={dismissWelcome} arrow />
 
-        <View style={styles.statsStrip}>
-          <Stat value={String(STRATEGY_NAMES.length)} label="STRATEGIES" />
-          <View style={styles.statDivider} />
-          <Stat value={String(QUESTIONS.length)} label="DRILLS" />
-          <View style={styles.statDivider} />
-          <Stat value="$0" label="TO START" />
-        </View>
-      </ScrollView>
+          <View style={styles.statsStrip}>
+            <Stat value={String(STRATEGY_NAMES.length)} label="STRATEGIES" />
+            <View style={styles.statDivider} />
+            <Stat value={String(QUESTIONS.length)} label="DRILLS" />
+            <View style={styles.statDivider} />
+            <Stat value="$0" label="TO START" />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -89,6 +94,8 @@ export default function Home() {
   const totalAttempts = strategyStats.attempts + readingStats.attempts;
   const totalCorrect = strategyStats.correct + readingStats.correct;
   const accuracyLabel = totalAttempts > 0 ? `${Math.round((totalCorrect / totalAttempts) * 100)}%` : '—';
+  const strategyIdCount = questionsByCategory('strategy-id').length;
+  const payoffReadingCount = questionsByCategory('payoff-reading').length;
 
   const onStartDrill = () => {
     if (!isPro && remaining <= 0) {
@@ -107,9 +114,10 @@ export default function Home() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.scroll} edges={['top']}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.wordmark}>StrikeCoach</Text>
+        <Wordmark />
         {isPro && <Text style={styles.proBadge}>PRO</Text>}
       </View>
 
@@ -121,34 +129,32 @@ export default function Home() {
         <Stat value={accuracyLabel} label="ACCURACY" />
       </View>
 
-      <Pressable style={styles.primaryButton} onPress={onStartDrill} accessibilityRole="button">
-        <Text style={styles.primaryButtonText}>Start drill</Text>
-      </Pressable>
+      <Button title="Start drill" onPress={onStartDrill} arrow />
 
-      <Text style={styles.sectionLabel}>CATEGORIES</Text>
+      <Text style={styles.sectionLabel}>DRILL CATEGORIES</Text>
 
-      <View style={styles.card}>
-        <Text style={type.title}>Strategy ID</Text>
-        <Text style={styles.cardBody}>
-          {strategyStats.attempts > 0
-            ? `${strategyStats.correct}/${strategyStats.attempts} correct`
-            : 'Not started yet'}
-        </Text>
-      </View>
+      <CategoryCard
+        glyph="Δ"
+        name="Strategy ID"
+        meta={`${strategyIdCount} drills`}
+        status={
+          strategyStats.attempts > 0 ? `${strategyStats.correct}/${strategyStats.attempts} correct` : 'Not started yet'
+        }
+      />
 
-      <View style={styles.card}>
-        <View style={styles.cardHeaderRow}>
-          <Text style={type.title}>Payoff Reading</Text>
-          {!categories.includes('payoff-reading') && <Text style={styles.lockBadge}>PRO</Text>}
-        </View>
-        <Text style={styles.cardBody}>
-          {categories.includes('payoff-reading')
+      <CategoryCard
+        glyph="∂"
+        name="Payoff Reading"
+        meta={categories.includes('payoff-reading') ? `${payoffReadingCount} drills` : undefined}
+        status={
+          categories.includes('payoff-reading')
             ? readingStats.attempts > 0
               ? `${readingStats.correct}/${readingStats.attempts} correct`
               : 'Not started yet'
-            : 'Unlock with StrikeCoach Pro'}
-        </Text>
-      </View>
+            : 'Unlock with StrikeCoach Pro'
+        }
+        locked={!categories.includes('payoff-reading')}
+      />
 
       <View style={styles.footerRow}>
         <Pressable
@@ -156,13 +162,14 @@ export default function Home() {
           accessibilityRole="button"
           accessibilityLabel={isPro ? 'View stats' : 'View stats, requires Pro'}
         >
-          <Text style={styles.link}>{isPro ? 'View stats' : 'View stats (Pro)'}</Text>
+          <Text style={styles.link}>{isPro ? 'View stats →' : 'View stats (Pro) →'}</Text>
         </Pressable>
         <Pressable onPress={() => router.push('/settings')} accessibilityRole="button">
           <Text style={styles.link}>Settings</Text>
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -175,8 +182,40 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
+function CategoryCard({
+  glyph,
+  name,
+  meta,
+  status,
+  locked,
+}: {
+  glyph: string;
+  name: string;
+  meta?: string;
+  status: string;
+  locked?: boolean;
+}) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTopRow}>
+        <View style={styles.glyphBadge}>
+          <Text style={styles.glyphText}>{glyph}</Text>
+        </View>
+        <View style={styles.cardTitleBlock}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={type.title}>{name}</Text>
+            {locked && <Text style={styles.lockBadge}>PRO</Text>}
+          </View>
+          {meta && <Text style={styles.cardMeta}>{meta}</Text>}
+        </View>
+      </View>
+      <Text style={styles.cardBody}>{status}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.md },
+  container: { padding: space.lg, paddingBottom: space.xl, gap: space.md, flexGrow: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg },
   scroll: { flex: 1, backgroundColor: color.bg },
   welcomeContent: { padding: space.lg, paddingBottom: space.xl, gap: space.md },
@@ -189,6 +228,10 @@ const styles = StyleSheet.create({
     color: color.ink,
     letterSpacing: -0.8,
     lineHeight: 42,
+  },
+  heroTitleAccent: {
+    color: color.accent,
+    fontStyle: 'italic',
   },
   welcomeBody: { ...type.body, color: color.inkMuted, lineHeight: 22 },
 
@@ -212,14 +255,6 @@ const styles = StyleSheet.create({
   previewAnswerLabel: { ...type.label, color: color.inkFaint },
   previewAnswerValue: { fontSize: 15, fontWeight: '700', color: color.profit },
 
-  primaryButton: {
-    backgroundColor: color.ink,
-    paddingVertical: space.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  primaryButtonText: { color: color.accentInk, fontSize: 16, fontWeight: '700' },
-
   statsStrip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -235,7 +270,6 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: color.border },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  wordmark: { fontSize: 22, fontWeight: '800', color: color.ink, letterSpacing: -0.4 },
   proBadge: {
     ...type.label,
     color: color.accentInk,
@@ -252,9 +286,23 @@ const styles = StyleSheet.create({
     borderColor: color.border,
     borderRadius: radius.md,
     padding: space.md,
-    gap: space.xs,
+    gap: space.sm,
   },
+  cardTopRow: { flexDirection: 'row', gap: space.sm, alignItems: 'flex-start' },
+  glyphBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: color.border,
+    backgroundColor: color.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glyphText: { fontSize: 18, fontWeight: '700', color: color.accent, fontFamily: type.mono },
+  cardTitleBlock: { flex: 1, gap: 2 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardMeta: { ...type.label, color: color.inkFaint },
   cardBody: { color: color.inkMuted, fontSize: 14 },
   lockBadge: {
     ...type.label,
