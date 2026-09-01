@@ -69,14 +69,21 @@ Screen-record the simulator (Xcode → Simulator → File → Record Screen, or 
 
 | Time | Shot |
 |---|---|
-| 0:00–0:10 | Welcome screen: hero + live sample drill preview (establishes what the app is instantly) |
-| 0:10–0:15 | Tap "Get started" → Home dashboard |
-| 0:15–0:45 | Start a drill, answer 2-3 questions (payoff diagram → choice → feedback), streak ticks up |
-| 0:45–0:55 | Hit the free daily cap → RevenueCat Paywall appears |
-| 0:55–1:15 | **Complete a real StoreKit sandbox purchase** — this is the shot that proves the RevenueCat integration actually works, don't cut it short |
-| 1:15–1:35 | Back on dashboard: unlimited drills + Payoff Reading unlocked, answer one (shows the mono `$` choice styling) |
-| 1:35–1:50 | Stats screen (Pro-gated): accuracy breakdown |
-| 1:50–2:00 | Settings: "StrikeCoach Pro — active" + Restore purchases, close on that |
+| 0:00–0:12 | Landing page: hero, then **scroll through the strategy library** — twelve sparklines with real computed max profit/loss. This is the strongest single shot in the app; don't rush past it |
+| 0:12–0:18 | Tap "Start drilling" → Home dashboard (activity strip + today's drill meter visible) |
+| 0:18–0:50 | Full drill session: payoff diagram → choose → feedback animates in. Answer all 5 |
+| 0:50–1:02 | **Session summary** with the per-question recap (✓/✗ + correct answers) |
+| 1:02–1:10 | Tap "Drill again" → out of free drills → RevenueCat Paywall appears |
+| 1:10–1:30 | **Complete a real StoreKit sandbox purchase** — the shot that proves the RevenueCat integration actually works. Don't cut it short |
+| 1:30–1:45 | Back on dashboard: PRO badge, "∞ unlimited" on the meter, Payoff Reading unlocked — answer one (shows the mono `$` choice styling) |
+| 1:45–1:55 | Stats screen (Pro-gated): accuracy breakdown |
+| 1:55–2:00 | Settings: "StrikeCoach Pro — active", close on that |
+
+**Recording note — the paywall now fires on "Drill again", not mid-session.** Completing a
+session always shows the summary first; the cap is enforced on the *next* attempt. So to reach
+the paywall on camera: finish all 5 free drills, land on the summary, then tap "Drill again".
+(Before, the paywall interrupted at the 5th answer and the summary was never reachable on the
+free tier — fixed, but it means the older shot order no longer matches the app.)
 
 No third-party music or trademarked content — voiceover or captions only, per the submission rules.
 
