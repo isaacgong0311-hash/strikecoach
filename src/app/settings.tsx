@@ -32,7 +32,13 @@ export default function Settings() {
         <Text style={styles.statusText}>{isPro ? 'StrikeCoach Pro — active' : 'Free plan'}</Text>
       </View>
 
-      <Pressable style={styles.button} onPress={onRestore} disabled={restoring}>
+      <Pressable
+        style={styles.button}
+        onPress={onRestore}
+        disabled={restoring}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: restoring, busy: restoring }}
+      >
         <Text style={styles.buttonText}>{restoring ? 'Restoring…' : 'Restore purchases'}</Text>
       </Pressable>
 

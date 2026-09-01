@@ -67,7 +67,7 @@ export default function Home() {
           </View>
         </View>
 
-        <Pressable style={styles.primaryButton} onPress={dismissWelcome}>
+        <Pressable style={styles.primaryButton} onPress={dismissWelcome} accessibilityRole="button">
           <Text style={styles.primaryButtonText}>Get started</Text>
         </Pressable>
 
@@ -121,7 +121,7 @@ export default function Home() {
         <Stat value={accuracyLabel} label="ACCURACY" />
       </View>
 
-      <Pressable style={styles.primaryButton} onPress={onStartDrill}>
+      <Pressable style={styles.primaryButton} onPress={onStartDrill} accessibilityRole="button">
         <Text style={styles.primaryButtonText}>Start drill</Text>
       </Pressable>
 
@@ -151,10 +151,14 @@ export default function Home() {
       </View>
 
       <View style={styles.footerRow}>
-        <Pressable onPress={onOpenStats}>
+        <Pressable
+          onPress={onOpenStats}
+          accessibilityRole="button"
+          accessibilityLabel={isPro ? 'View stats' : 'View stats, requires Pro'}
+        >
           <Text style={styles.link}>{isPro ? 'View stats' : 'View stats (Pro)'}</Text>
         </Pressable>
-        <Pressable onPress={() => router.push('/settings')}>
+        <Pressable onPress={() => router.push('/settings')} accessibilityRole="button">
           <Text style={styles.link}>Settings</Text>
         </Pressable>
       </View>

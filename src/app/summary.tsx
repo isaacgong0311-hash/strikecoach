@@ -32,10 +32,14 @@ export default function Summary() {
       </Text>
 
       <View style={styles.buttonGroup}>
-        <Pressable style={styles.primaryButton} onPress={onDrillAgain}>
+        <Pressable style={styles.primaryButton} onPress={onDrillAgain} accessibilityRole="button">
           <Text style={styles.primaryButtonText}>Drill again</Text>
         </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.replace('/')}>
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => router.replace('/')}
+          accessibilityRole="button"
+        >
           <Text style={styles.secondaryButtonText}>Back to home</Text>
         </Pressable>
       </View>

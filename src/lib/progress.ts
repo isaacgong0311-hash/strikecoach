@@ -96,7 +96,16 @@ export function drillsRemainingToday(state: ProgressState, isPro: boolean, today
 }
 
 export async function loadProgress(): Promise<ProgressState> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  // The read itself (not just JSON.parse) can throw on rare storage failures
+  // (corrupted native storage, some Android edge cases) — falling back to
+  // fresh progress beats crashing on launch over what's just local stats.
+  let raw: string | null = null;
+  try {
+    raw = await AsyncStorage.getItem(STORAGE_KEY);
+  } catch (err) {
+    console.warn('[progress] AsyncStorage read failed, starting fresh', err);
+    return emptyProgress(todayKey());
+  }
   if (!raw) return emptyProgress(todayKey());
   try {
     const parsed = JSON.parse(raw) as ProgressState;

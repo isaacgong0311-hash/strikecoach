@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import PayoffDiagram from '../components/PayoffDiagram';
 import { Question } from '../content/questions';
@@ -20,6 +20,7 @@ export default function Drill() {
   const [selected, setSelected] = useState<number | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const feedbackAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     (async () => {
@@ -30,6 +31,21 @@ export default function Drill() {
       setQuestion(pickNextQuestion(availablePool, newSession()));
     })();
   }, [isPro]);
+
+  // Feedback fades/slides in on reveal — the one moment in the drill loop
+  // worth a deliberate animation (correct/incorrect resolution). Short,
+  // eased-out, no bounce: matches the app's flat, considered visual system
+  // rather than adding motion for its own sake.
+  useEffect(() => {
+    if (selected === null) return;
+    feedbackAnim.setValue(0);
+    Animated.timing(feedbackAnim, {
+      toValue: 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [selected, feedbackAnim]);
 
   if (!pool || !question || !progress) {
     return (
@@ -94,12 +110,24 @@ export default function Drill() {
           if (isAnswered && isRight) variant = 'correct';
           else if (isAnswered && isSelected && !isRight) variant = 'incorrect';
 
+          // Screen readers can't see the color coding, so the label carries
+          // correctness explicitly once the question is answered.
+          const a11yLabel =
+            variant === 'correct'
+              ? `${choice}, correct answer`
+              : variant === 'incorrect'
+                ? `${choice}, your answer, incorrect`
+                : choice;
+
           return (
             <Pressable
               key={choice}
               onPress={() => onSelect(index)}
               disabled={isAnswered}
               style={[styles.choice, variant === 'correct' && styles.choiceCorrect, variant === 'incorrect' && styles.choiceIncorrect]}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isSelected, disabled: isAnswered }}
+              accessibilityLabel={a11yLabel}
             >
               <Text style={[styles.choiceText, question.category === 'payoff-reading' && styles.choiceTextMono]}>
                 {choice}
@@ -110,15 +138,27 @@ export default function Drill() {
       </View>
 
       {isAnswered && (
-        <View style={styles.feedback}>
+        <Animated.View
+          style={[
+            styles.feedback,
+            {
+              opacity: feedbackAnim,
+              transform: [
+                {
+                  translateY: feedbackAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+                },
+              ],
+            },
+          ]}
+        >
           <Text style={[styles.feedbackHeadline, { color: isCorrect ? color.profit : color.loss }]}>
             {isCorrect ? 'Correct' : 'Not quite'}
           </Text>
           <Text style={styles.explanation}>{question.explanation}</Text>
-          <Pressable style={styles.primaryButton} onPress={onNext}>
+          <Pressable style={styles.primaryButton} onPress={onNext} accessibilityRole="button">
             <Text style={styles.primaryButtonText}>Next</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       )}
     </View>
   );

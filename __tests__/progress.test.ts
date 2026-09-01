@@ -1,9 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   emptyProgress,
   applyDailyReset,
   applyStreakForNewDay,
   recordAnswer,
   drillsRemainingToday,
+  loadProgress,
   DAILY_FREE_DRILLS,
 } from '../src/lib/progress';
 
@@ -73,5 +75,22 @@ describe('drillsRemainingToday', () => {
   it('never goes negative once the cap is exceeded', () => {
     const state = { ...emptyProgress('2026-08-29'), dailyDrillsUsed: DAILY_FREE_DRILLS + 3 };
     expect(drillsRemainingToday(state, false, '2026-08-29')).toBe(0);
+  });
+});
+
+describe('loadProgress', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('falls back to fresh progress instead of throwing when AsyncStorage.getItem rejects', async () => {
+    jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('storage unavailable'));
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await loadProgress();
+
+    expect(result.streak).toBe(0);
+    expect(result.dailyDrillsUsed).toBe(0);
+    expect(warnSpy).toHaveBeenCalled();
   });
 });
