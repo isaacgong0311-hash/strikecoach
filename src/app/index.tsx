@@ -7,14 +7,12 @@ import { loadProgress, drillsRemainingToday, ProgressState } from '../lib/progre
 import { unlockedCategories } from '../lib/drillEngine';
 import { useEntitlement } from '../lib/revenuecat';
 import { color, space, type, radius } from '../theme';
-import PayoffDiagram from '../components/PayoffDiagram';
 import Button from '../components/Button';
 import Wordmark from '../components/Wordmark';
-import { STRATEGY_INSTANCES, STRATEGY_NAMES } from '../content/strategies';
-import { QUESTIONS, questionsByCategory } from '../content/questions';
+import WelcomeScreen from '../components/WelcomeScreen';
+import { questionsByCategory } from '../content/questions';
 
 const ONBOARDED_KEY = 'strikecoach.onboarded.v1';
-const PREVIEW = STRATEGY_INSTANCES.find((s) => s.strategyKey === 'iron-condor')!;
 
 export default function Home() {
   const router = useRouter();
@@ -48,43 +46,7 @@ export default function Home() {
   }
 
   if (showWelcome) {
-    return (
-      <SafeAreaView style={styles.scroll} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.welcomeContent}>
-          <Wordmark />
-          <Text style={styles.kicker}>Free to start · options intuition</Text>
-
-          <Text style={styles.heroTitle}>
-            Read the chart.{'\n'}Call{' '}
-            <Text style={styles.heroTitleAccent}>the strategy.</Text>
-          </Text>
-          <Text style={styles.welcomeBody}>
-            Five drills a day, free. Payoff diagrams, strategy ID, breakevens — get sharp the way
-            you'd drill flashcards, not by rereading a textbook.
-          </Text>
-
-          <View style={styles.previewCard}>
-            <Text style={type.label}>SAMPLE DRILL</Text>
-            <Text style={styles.previewQuestion}>Which strategy does this payoff diagram show?</Text>
-            <PayoffDiagram points={PREVIEW.points} domain={PREVIEW.domain} width={300} height={140} />
-            <View style={styles.previewAnswerRow}>
-              <Text style={styles.previewAnswerLabel}>ANSWER</Text>
-              <Text style={styles.previewAnswerValue}>{PREVIEW.strategyName}</Text>
-            </View>
-          </View>
-
-          <Button title="Get started" onPress={dismissWelcome} arrow />
-
-          <View style={styles.statsStrip}>
-            <Stat value={String(STRATEGY_NAMES.length)} label="STRATEGIES" />
-            <View style={styles.statDivider} />
-            <Stat value={String(QUESTIONS.length)} label="DRILLS" />
-            <View style={styles.statDivider} />
-            <Stat value="$0" label="TO START" />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
+    return <WelcomeScreen onStart={dismissWelcome} />;
   }
 
   const remaining = drillsRemainingToday(progress, isPro);
@@ -218,42 +180,6 @@ const styles = StyleSheet.create({
   container: { padding: space.lg, paddingBottom: space.xl, gap: space.md, flexGrow: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg },
   scroll: { flex: 1, backgroundColor: color.bg },
-  welcomeContent: { padding: space.lg, paddingBottom: space.xl, gap: space.md },
-
-  kicker: { ...type.label, color: color.inkFaint },
-
-  heroTitle: {
-    fontSize: 38,
-    fontWeight: '800',
-    color: color.ink,
-    letterSpacing: -0.8,
-    lineHeight: 42,
-  },
-  heroTitleAccent: {
-    color: color.accent,
-    fontStyle: 'italic',
-  },
-  welcomeBody: { ...type.body, color: color.inkMuted, lineHeight: 22 },
-
-  previewCard: {
-    backgroundColor: color.surface,
-    borderWidth: 1,
-    borderColor: color.border,
-    borderRadius: radius.md,
-    padding: space.md,
-    gap: space.sm,
-  },
-  previewQuestion: { fontSize: 16, fontWeight: '700', color: color.ink },
-  previewAnswerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: color.border,
-    paddingTop: space.sm,
-  },
-  previewAnswerLabel: { ...type.label, color: color.inkFaint },
-  previewAnswerValue: { fontSize: 15, fontWeight: '700', color: color.profit },
 
   statsStrip: {
     flexDirection: 'row',
