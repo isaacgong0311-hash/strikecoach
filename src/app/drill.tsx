@@ -7,6 +7,7 @@ import { Question } from '../content/questions';
 import { availableQuestions, newSession, pickNextQuestion, recordSessionAnswer, DrillSessionState } from '../lib/drillEngine';
 import { loadProgress, saveProgress, recordAnswer, drillsRemainingToday, ProgressState } from '../lib/progress';
 import { useEntitlement } from '../lib/revenuecat';
+import { SessionEntry, encodeSessionLog } from '../lib/sessionLog';
 import { color, space, type, radius } from '../theme';
 
 const SESSION_LENGTH = 5;
@@ -21,6 +22,7 @@ export default function Drill() {
   const [selected, setSelected] = useState<number | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [log, setLog] = useState<SessionEntry[]>([]);
   const feedbackAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -69,6 +71,10 @@ export default function Drill() {
     setSession(recordSessionAnswer(session, question, correct));
     setAnsweredCount((c) => c + 1);
     if (correct) setCorrectCount((c) => c + 1);
+    setLog((prev) => [
+      ...prev,
+      { prompt: question.prompt, answer: question.choices[question.correctIndex], correct },
+    ]);
   };
 
   const onNext = async () => {
@@ -76,17 +82,27 @@ export default function Drill() {
     const remaining = drillsRemainingToday(progress, isPro);
     const outOfFreeDrills = !isPro && remaining <= 0;
 
+    // Finishing the session wins over the paywall, and the order matters:
+    // SESSION_LENGTH and DAILY_FREE_DRILLS are both 5, so a free user who
+    // completes a session has ALWAYS just hit the cap. Checking the cap first
+    // meant free users were paywalled straight to the dashboard and never saw
+    // the summary at all. They now get their result, and the upsell lands on
+    // "Drill again" — a better moment to ask anyway.
+    if (finishedSession) {
+      router.replace({
+        pathname: '/summary',
+        params: { correct: String(correctCount), total: String(answeredCount), log: encodeSessionLog(log) },
+      });
+      return;
+    }
+
+    // Ran out mid-session (started with fewer drills left than a full session).
     if (outOfFreeDrills) {
       const result = await presentPaywall();
       // Whether they bought or dismissed, send them back to the dashboard —
       // it will re-check entitlement/remaining drills fresh.
       void result;
       router.replace('/');
-      return;
-    }
-
-    if (finishedSession) {
-      router.replace({ pathname: '/summary', params: { correct: String(correctCount), total: String(answeredCount) } });
       return;
     }
 
