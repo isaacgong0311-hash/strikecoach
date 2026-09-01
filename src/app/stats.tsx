@@ -2,14 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { loadProgress, ProgressState } from '../lib/progress';
+import { loadProgress, recentActivity, CategoryStats, ProgressState } from '../lib/progress';
 import { useEntitlement } from '../lib/revenuecat';
 import { color, space, type, radius } from '../theme';
-
-function accuracyLabel(stats: { attempts: number; correct: number }): string {
-  if (stats.attempts === 0) return 'No drills yet';
-  return `${Math.round((stats.correct / stats.attempts) * 100)}% (${stats.correct}/${stats.attempts})`;
-}
 
 export default function Stats() {
   const router = useRouter();
@@ -37,37 +32,76 @@ export default function Stats() {
     );
   }
 
+  const sid = progress.categoryStats['strategy-id'];
+  const pr = progress.categoryStats['payoff-reading'];
+  const totalAttempts = sid.attempts + pr.attempts;
+  const totalCorrect = sid.correct + pr.correct;
+  const overall = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+  const daysActive = recentActivity(progress, undefined, 30).filter((d) => d.active).length;
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={type.label}>CURRENT STREAK</Text>
-        <Text style={styles.bigNumber}>{progress.streak} days</Text>
+      <View style={styles.headlineRow}>
+        <Headline value={totalAttempts > 0 ? `${overall}%` : '—'} label="OVERALL" />
+        <View style={styles.headlineDivider} />
+        <Headline value={String(totalAttempts)} label="DRILLS DONE" />
+        <View style={styles.headlineDivider} />
+        <Headline value={String(progress.streak)} label="STREAK" />
       </View>
 
+      <Text style={styles.sectionLabel}>BY CATEGORY</Text>
+      <CategoryStatCard glyph="Δ" name="Strategy ID" stats={sid} />
+      <CategoryStatCard glyph="∂" name="Payoff Reading" stats={pr} />
+
+      <Text style={styles.sectionLabel}>CONSISTENCY</Text>
       <View style={styles.card}>
-        <View style={styles.cardTopRow}>
-          <View style={styles.glyphBadge}>
-            <Text style={styles.glyphText}>Δ</Text>
-          </View>
-          <View style={styles.cardTitleBlock}>
-            <Text style={type.label}>STRATEGY ID</Text>
-            <Text style={styles.statLine}>{accuracyLabel(progress.categoryStats['strategy-id'])}</Text>
-          </View>
+        <View style={styles.consistencyRow}>
+          <Text style={styles.consistencyLabel}>Days drilled, last 30</Text>
+          <Text style={styles.consistencyValue}>{daysActive}</Text>
         </View>
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.cardTopRow}>
-          <View style={styles.glyphBadge}>
-            <Text style={styles.glyphText}>∂</Text>
-          </View>
-          <View style={styles.cardTitleBlock}>
-            <Text style={type.label}>PAYOFF READING</Text>
-            <Text style={styles.statLine}>{accuracyLabel(progress.categoryStats['payoff-reading'])}</Text>
-          </View>
+        <View style={styles.consistencyRow}>
+          <Text style={styles.consistencyLabel}>Current streak</Text>
+          <Text style={styles.consistencyValue}>
+            {progress.streak} {progress.streak === 1 ? 'day' : 'days'}
+          </Text>
         </View>
       </View>
     </ScrollView>
+  );
+}
+
+function Headline({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.headline}>
+      <Text style={styles.headlineValue}>{value}</Text>
+      <Text style={styles.headlineLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function CategoryStatCard({ glyph, name, stats }: { glyph: string; name: string; stats: CategoryStats }) {
+  const pct = stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : 0;
+  const started = stats.attempts > 0;
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTopRow}>
+        <View style={styles.glyphBadge}>
+          <Text style={styles.glyphText}>{glyph}</Text>
+        </View>
+        <View style={styles.cardTitleBlock}>
+          <Text style={styles.cardName}>{name}</Text>
+          <Text style={styles.statLine}>
+            {started ? `${stats.correct}/${stats.attempts} correct` : 'No drills yet'}
+          </Text>
+        </View>
+        <Text style={[styles.cardPct, !started && styles.cardPctIdle]}>{started ? `${pct}%` : '—'}</Text>
+      </View>
+      {/* A bar beats a bare percentage here — this is the stats screen, and
+          two categories are only comparable when you can see them side by side. */}
+      <View style={styles.barTrack}>
+        <View style={[styles.barFill, { width: `${started ? pct : 0}%` }]} />
+      </View>
+    </View>
   );
 }
 
@@ -75,13 +109,30 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: color.bg },
   container: { padding: space.lg, paddingBottom: space.xl, gap: space.md, flexGrow: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg },
+
+  headlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: radius.md,
+    paddingVertical: space.md,
+  },
+  headline: { flex: 1, alignItems: 'center', gap: 2 },
+  headlineValue: { fontSize: 24, fontWeight: '800', color: color.ink, fontFamily: type.mono },
+  headlineLabel: { ...type.label, color: color.inkFaint },
+  headlineDivider: { width: 1, alignSelf: 'stretch', backgroundColor: color.border },
+
+  sectionLabel: { ...type.label, color: color.inkFaint, marginTop: space.xs },
+
   card: {
     backgroundColor: color.surface,
     borderWidth: 1,
     borderColor: color.border,
     borderRadius: radius.md,
     padding: space.md,
-    gap: space.xs,
+    gap: space.sm,
   },
   cardTopRow: { flexDirection: 'row', gap: space.sm, alignItems: 'center' },
   glyphBadge: {
@@ -96,6 +147,15 @@ const styles = StyleSheet.create({
   },
   glyphText: { fontSize: 18, fontWeight: '700', color: color.accent, fontFamily: type.mono },
   cardTitleBlock: { flex: 1, gap: 2 },
-  bigNumber: { fontSize: 28, fontWeight: '700', color: color.ink, fontFamily: type.mono },
-  statLine: { fontSize: 16, color: color.inkMuted, fontFamily: type.mono },
+  cardName: { fontSize: 17, fontWeight: '700', color: color.ink },
+  statLine: { fontSize: 13, color: color.inkMuted, fontFamily: type.mono },
+  cardPct: { fontSize: 20, fontWeight: '800', color: color.accent, fontFamily: type.mono },
+  cardPctIdle: { color: color.inkFaint },
+
+  barTrack: { height: 6, borderRadius: radius.sm, backgroundColor: color.bg, overflow: 'hidden' },
+  barFill: { height: '100%', backgroundColor: color.accent, borderRadius: radius.sm },
+
+  consistencyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  consistencyLabel: { fontSize: 14, color: color.inkMuted },
+  consistencyValue: { fontSize: 15, fontWeight: '700', color: color.ink, fontFamily: type.mono },
 });
